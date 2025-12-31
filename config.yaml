@@ -1,0 +1,327 @@
+# BELLHOP Protocol Configuration
+# Version 1.0.0
+
+network:
+  # Network identification
+  network_id: "BELLHOP_NET_001"
+  network_name: "Secure Mesh Network"
+  
+  # Network parameters
+  max_nodes: 256
+  max_hops: 10
+  ttl: 30  # seconds
+
+security:
+  # Encryption settings
+  encryption:
+    algorithm: "AES-256-GCM"  # Primary: AES-256-GCM, Fallback: ChaCha20-Poly1305
+    key_size: 256  # bits
+    key_rotation_interval: 86400  # seconds (24 hours)
+    key_rotation_packet_limit: 1000000
+  
+  # Authentication
+  authentication:
+    mode: "PSK"  # Options: PSK, Certificate, MultiFactor
+    psk: "CHANGE_THIS_SECURE_PASSWORD_32_CHARS_MIN"
+    certificate_path: "/etc/bellhop/certs/"
+    ca_cert: "ca.crt"
+    node_cert: "node.crt"
+    node_key: "node.key"
+  
+  # Replay protection
+  replay_protection:
+    enabled: true
+    window_size: 64
+    max_time_diff: 30  # seconds
+  
+  # Secure element
+  secure_element:
+    enabled: true
+    type: "ATECC608"  # Hardware security chip
+    i2c_address: 0x60
+
+frequency_hopping:
+  # Frequency band (region-dependent)
+  band: "915MHz"  # Options: 433MHz, 868MHz, 915MHz
+  
+  # Channel configuration
+  total_channels: 50
+  channel_spacing: 125  # kHz
+  
+  # Hopping parameters
+  hop_duration: 10  # milliseconds (100 hops/second)
+  dwell_time: 8  # milliseconds
+  transition_time: 2  # milliseconds
+  
+  # Adaptive hopping
+  adaptive_mode: true
+  fast_mode_duration: 5  # milliseconds (200 hops/second)
+  slow_mode_duration: 50  # milliseconds (20 hops/second)
+  
+  # Channel quality
+  rssi_threshold: -100  # dBm
+  snr_threshold: 10  # dB
+  per_threshold: 0.05  # 5% packet error rate
+  
+  # Synchronization
+  time_sync_method: "GPS"  # Options: GPS, NetworkMaster, Hybrid
+  resync_interval: 10  # seconds
+
+radio:
+  # LoRa configuration
+  modulation: "LoRa"
+  bandwidth: 125  # kHz
+  spreading_factor: 7
+  coding_rate: "4/5"
+  
+  # Power settings
+  tx_power: 20  # dBm (max allowed by regulation)
+  tx_power_min: 2  # dBm (minimum)
+  adaptive_power: true
+  
+  # Antenna
+  antenna_gain: 2.15  # dBi
+
+geofencing:
+  # Enable geofencing
+  enabled: true
+  
+  # Fence definition (polygon vertices)
+  boundary:
+    coordinates:
+      - lat: 37.7749
+        lon: -122.4194
+      - lat: 37.7750
+        lon: -122.4180
+      - lat: 37.7735
+        lon: -122.4175
+      - lat: 37.7730
+        lon: -122.4190
+    altitude_min: 0  # meters
+    altitude_max: 500  # meters
+    buffer_zone: 50  # meters (warning zone)
+  
+  # Validation methods
+  validation:
+    gps_enabled: true
+    signal_based_enabled: true
+    time_of_flight_enabled: true
+    fingerprinting_enabled: true
+    
+    # GPS anti-spoofing
+    multi_constellation: true  # GPS + GLONASS + Galileo
+    signal_strength_check: true
+    movement_validation: true
+    max_velocity: 50  # m/s (reject if exceeded)
+  
+  # Reference nodes for signal-based positioning
+  reference_nodes:
+    - node_id: 0x0001
+      lat: 37.7749
+      lon: -122.4194
+      tx_power: 20
+    - node_id: 0x0002
+      lat: 37.7750
+      lon: -122.4180
+      tx_power: 20
+    - node_id: 0x0003
+      lat: 37.7735
+      lon: -122.4175
+      tx_power: 20
+  
+  # Validation thresholds
+  validation_threshold: 0.6  # Accept if >60% confidence
+  position_accuracy: 20  # meters
+  update_frequency: 30  # seconds
+
+initialization:
+  # 6000-package initialization sequence
+  enabled: true
+  
+  # Phase configuration
+  phases:
+    discovery:
+      start: 1
+      end: 1000
+      timeout: 60  # seconds
+    
+    key_exchange:
+      start: 1001
+      end: 2000
+      timeout: 120
+    
+    channel_setup:
+      start: 2001
+      end: 3000
+      timeout: 90
+    
+    security_testing:
+      start: 3001
+      end: 4000
+      timeout: 120
+    
+    geofence_setup:
+      start: 4001
+      end: 5000
+      timeout: 90
+    
+    finalization:
+      start: 5001
+      end: 6000
+      timeout: 60
+  
+  # Retry configuration
+  max_retries: 3
+  retry_delay: 5  # seconds
+
+nuc:
+  # Central aggregation node
+  enabled: true
+  node_id: 0xFFFF
+  
+  # Connection
+  gateway_connection:
+    type: "USB"  # Options: USB, Network
+    serial_port: "/dev/ttyUSB0"
+    baud_rate: 115200
+    network_host: "192.168.1.100"
+    network_port: 5000
+  
+  # Data streaming
+  stream:
+    enabled: true
+    batch_size: 100
+    batch_interval: 1  # seconds
+    compression: true
+  
+  # Database
+  database:
+    type: "postgresql"  # Options: postgresql, sqlite, mysql
+    host: "localhost"
+    port: 5432
+    name: "bellhop"
+    user: "bellhop"
+    password: "CHANGE_THIS_PASSWORD"
+    connection_pool_size: 10
+  
+  # Analytics
+  analytics:
+    enabled: true
+    anomaly_detection: true
+    ml_models_path: "/var/lib/bellhop/models/"
+    training_interval: 86400  # seconds (daily)
+  
+  # Dashboard
+  dashboard:
+    enabled: true
+    host: "0.0.0.0"
+    port: 8080
+    ssl_enabled: false
+    ssl_cert: "/etc/bellhop/ssl/cert.pem"
+    ssl_key: "/etc/bellhop/ssl/key.pem"
+    update_interval: 5  # seconds
+
+alerts:
+  # Alert configuration
+  enabled: true
+  
+  # Email alerts
+  email:
+    enabled: true
+    smtp_server: "smtp.gmail.com"
+    smtp_port: 587
+    smtp_user: "alerts@example.com"
+    smtp_password: "CHANGE_THIS_PASSWORD"
+    recipients:
+      - "admin@example.com"
+      - "security@example.com"
+    
+    # Alert levels to email
+    min_severity: "medium"  # Options: low, medium, high, critical
+  
+  # SMS alerts
+  sms:
+    enabled: false
+    provider: "twilio"
+    account_sid: "YOUR_ACCOUNT_SID"
+    auth_token: "YOUR_AUTH_TOKEN"
+    from_number: "+1234567890"
+    to_numbers:
+      - "+1234567891"
+    
+    # Only critical alerts via SMS
+    min_severity: "critical"
+  
+  # Webhook alerts
+  webhook:
+    enabled: false
+    url: "https://example.com/webhook"
+    method: "POST"
+    headers:
+      Authorization: "Bearer YOUR_TOKEN"
+
+logging:
+  # Logging configuration
+  level: "INFO"  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  
+  # Log destinations
+  console:
+    enabled: true
+    level: "INFO"
+  
+  file:
+    enabled: true
+    path: "/var/log/bellhop/"
+    filename: "bellhop.log"
+    max_size: 100  # MB
+    backup_count: 10
+    level: "INFO"
+  
+  syslog:
+    enabled: false
+    host: "localhost"
+    port: 514
+    level: "WARNING"
+
+performance:
+  # Performance tuning
+  max_packet_rate: 100  # packets per second
+  max_queue_size: 10000
+  processing_threads: 4
+  batch_processing: true
+  
+  # Resource limits
+  max_memory: 1024  # MB
+  max_cpu_percent: 80
+
+monitoring:
+  # Self-monitoring
+  health_check_interval: 60  # seconds
+  metrics_collection: true
+  metrics_retention: 2592000  # seconds (30 days)
+  
+  # Metrics to collect
+  metrics:
+    - "packet_rate"
+    - "node_count"
+    - "average_rssi"
+    - "packet_loss"
+    - "cpu_usage"
+    - "memory_usage"
+    - "disk_usage"
+
+maintenance:
+  # Maintenance windows
+  auto_backup:
+    enabled: true
+    interval: 86400  # seconds (daily)
+    path: "/var/backups/bellhop/"
+    retention: 30  # days
+  
+  # Database maintenance
+  vacuum_interval: 604800  # seconds (weekly)
+  
+  # Log rotation
+  log_rotation:
+    enabled: true
+    interval: 86400  # seconds (daily)
